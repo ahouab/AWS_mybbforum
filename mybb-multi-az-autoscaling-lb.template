@@ -706,7 +706,7 @@
             },
 
             "sources": {
-              "/tmp/mybb": "https://github.com/vpalos/cloudformation-mybb/tarball/master"
+              "/tmp/mybb": "https://github.com/WesleyCharlesBlake/mybb-aws-cloud-formation-app/tarball/master"
             },
 
             "files": {
