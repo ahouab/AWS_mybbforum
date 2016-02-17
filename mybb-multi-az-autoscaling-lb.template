@@ -558,6 +558,20 @@
               "autoscaling:EC2_INSTANCE_TERMINATE_ERROR"]
           }
         ]
+      },
+      "CreationPolicy" : {
+        "ResourceSignal" : {
+          "Timeout" : "PT15M",
+          "Count"   : "1"
+        }
+      },
+      "UpdatePolicy": {
+        "AutoScalingRollingUpdate": {
+          "MinInstancesInService": "1",
+          "MaxBatchSize": "1",
+          "PauseTime" : "PT15M",
+          "WaitOnResourceSignals": "true"
+        }
       }
     },
 
@@ -769,22 +783,9 @@
 
           "/opt/aws/bin/cfn-signal -e $? ",
           "   --stack ", { "Ref": "AWS::StackName" },
-          "   --resource LaunchConfig ",
+          "   --resource WebServerGroup ",
           "   --region ", { "Ref": "AWS::Region" }, "\n"
         ]]}}
-      },
-      "CreationPolicy" : {
-        "ResourceSignal" : {
-          "Timeout" : "PT15M"
-        }
-      },
-      "UpdatePolicy": {
-        "AutoScalingRollingUpdate": {
-          "MinInstancesInService": "1",
-          "MaxBatchSize": "1",
-          "PauseTime" : "PT15M",
-          "WaitOnResourceSignals": "true"
-        }
       }
     },
 
