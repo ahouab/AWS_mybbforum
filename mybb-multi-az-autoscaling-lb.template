@@ -33,7 +33,7 @@
     "DBClass" : {
       "Description" : "Database instance class",
       "Type" : "String",
-      "Default" : "db.t2.small",
+      "Default" : "db.m4.large",
       "AllowedValues" : [ "db.t1.micro", "db.m1.small", "db.m1.medium", "db.m1.large", "db.m1.xlarge", "db.m2.xlarge", "db.m2.2xlarge", "db.m2.4xlarge", "db.m3.medium", "db.m3.large", "db.m3.xlarge", "db.m3.2xlarge", "db.m4.large", "db.m4.xlarge", "db.m4.2xlarge", "db.m4.4xlarge", "db.m4.10xlarge", "db.r3.large", "db.r3.xlarge", "db.r3.2xlarge", "db.r3.4xlarge", "db.r3.8xlarge", "db.m2.xlarge", "db.m2.2xlarge", "db.m2.4xlarge", "db.cr1.8xlarge", "db.t2.micro", "db.t2.small", "db.t2.medium", "db.t2.large"]
 ,
       "ConstraintDescription" : "must select a valid database instance type."
@@ -255,7 +255,7 @@
         "EnableDnsHostnames" : "true",
         "Tags" : [ 
            {"Key" : "Application", "Value" : { "Ref" : "AWS::StackId"} },
-           { "Key" : "Network", "Value" : "Public" }
+           {"Key" : "Network", "Value" : "Public" }
         ]
       }
     },
@@ -336,7 +336,6 @@
         "RouteTableId" : { "Ref" : "RouteTable" }
       }
     },
-
     "NetworkAcl" : {
       "Type" : "AWS::EC2::NetworkAcl",
       "Properties" : {
@@ -344,7 +343,7 @@
         "Tags" : [ {"Key" : "Application", "Value" : { "Ref" : "AWS::StackId"} } ]
       }
     },
-
+   
     "InboundHTTPNetworkAclEntry" : {
       "Type" : "AWS::EC2::NetworkAclEntry",
       "Properties" : {
@@ -431,6 +430,15 @@
       }
     },
 
+    "AlarmTopic" : {
+      "Type" : "AWS::SNS::Topic",
+      "Properties" : {
+        "Subscription" : [ {
+          "Endpoint" : { "Ref" : "OperatorEmail" },
+          "Protocol" : "email"
+        } ]
+      }
+    },
 
     "ElasticLoadBalancer" : {
       "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
@@ -464,8 +472,22 @@
       "Properties" : {
         "GroupDescription" : "Public ELB Security Group with HTTP access on port 80 from the internet",
         "VpcId" : { "Ref" : "VPC" },
-        "SecurityGroupIngress" : [ { "IpProtocol" : "tcp", "FromPort" : "80", "ToPort" : "80", "CidrIp" : "0.0.0.0/0"} ],
-        "SecurityGroupEgress" : [ { "IpProtocol" : "tcp", "FromPort" : "80", "ToPort" : "80", "CidrIp" : "0.0.0.0/0"} ]
+        "SecurityGroupIngress" : [ 
+          { 
+            "IpProtocol" : "tcp", 
+            "FromPort" : "80", 
+            "ToPort" : "80", 
+            "CidrIp" : "0.0.0.0/0"
+          } 
+        ],
+        "SecurityGroupEgress" : [ 
+          { 
+            "IpProtocol" : "tcp", 
+            "FromPort" : "80", 
+            "ToPort" : "80", 
+            "CidrIp" : "0.0.0.0/0"
+          } 
+        ]
       }
     },
 
@@ -488,7 +510,7 @@
           }
         ]
       }
-    },
+      },
 
     "WebServerGroup" : {
       "Type" : "AWS::AutoScaling::AutoScalingGroup",
@@ -497,155 +519,40 @@
         "VPCZoneIdentifier" : [{ "Ref" : "PublicSubnet" }],
         "LaunchConfigurationName" : { "Ref" : "LaunchConfig" },
         "MinSize" : "1",
-        "MaxSize" : "5",
+        "MaxSize" : "10",
         "DesiredCapacity" : { "Ref" : "WebServerCapacity" },
-        "LoadBalancerNames" : [ { "Ref" : "ElasticLoadBalancer" } ]
-      }
-    },
-
-    "LaunchConfig": {
-      "Type" : "AWS::AutoScaling::LaunchConfiguration",
-      "Metadata" : {
-        "AWS::CloudFormation::Init" : {
-          "configSets" : {
-            "mybb_app_install" : ["install_cfn", "install_mybb" ]
-          },
-          "install_cfn" : {
-            "files": {
-              "/etc/cfn/cfn-hup.conf": {
-                "content": { "Fn::Join": [ "", [
-                  "[main]\n",
-                  "stack=", { "Ref": "AWS::StackId" }, "\n",
-                  "region=", { "Ref": "AWS::Region" }, "\n"
-                ]]},
-                "mode"  : "000400",
-                "owner" : "root",
-                "group" : "root"
-              },
-              "/etc/cfn/hooks.d/cfn-auto-reloader.conf": {
-                "content": { "Fn::Join": [ "", [
-                  "[cfn-auto-reloader-hook]\n",
-                  "triggers=post.update\n",
-                  "path=Resources.LaunchConfig.Metadata.AWS::CloudFormation::Init\n",
-                  "action=/opt/aws/bin/cfn-init -v ",
-                          "         --stack ", { "Ref" : "AWS::StackName" },
-                          "         --resource LaunchConfig ",
-                          "         --configsets mybb_app_install ",
-                          "         --region ", { "Ref" : "AWS::Region" }, "\n"
-                ]]},          
-                "mode"  : "000400",
-                "owner" : "root",
-                "group" : "root"
-              }
-            },
-            "services" : {
-              "sysvinit" : {
-                "cfn-hup" : { "enabled" : "true", "ensureRunning" : "true",
-                              "files" : ["/etc/cfn/cfn-hup.conf", "/etc/cfn/hooks.d/cfn-auto-reloader.conf"]}
-              }
-            }
-          },
-
-          "install_mybb" : {
-            "packages" : {
-              "yum" : {
-                "php"       : [],
-                "php-mysql" : [],
-                "mysql"     : [],
-                "httpd"     : []
-              }
-            },
-            "sources" : {
-              "/var/www/html" : "https://s3-us-west-2.amazonaws.com/wesleycharlesblake/mybb_app.tar.gz"
-            },
-            "services" : {
-              "sysvinit" : {
-                "httpd" : { "enabled" : "true", "ensureRunning" : "true" }
-              }
-            }
+        "LoadBalancerNames" : [ { "Ref" : "ElasticLoadBalancer" } ],
+        "NotificationConfigurations": [
+          {
+            "TopicARN": { "Ref": "AlarmTopic" },
+            "NotificationTypes": 
+              ["autoscaling:EC2_INSTANCE_LAUNCH",
+              "autoscaling:EC2_INSTANCE_LAUNCH_ERROR",
+              "autoscaling:EC2_INSTANCE_TERMINATE",
+              "autoscaling:EC2_INSTANCE_TERMINATE_ERROR"]
           }
-        }
-      },
+        ]
+      }
+    },
+
+    "AsgScaleUpPolicy": {
+      "Type": "AWS::AutoScaling::ScalingPolicy",
       "Properties": {
-        "ImageId" : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" },
-                          { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "InstanceType" }, "Arch" ] } ] },
-        "InstanceType"   : { "Ref" : "InstanceType" },
-        "SecurityGroups" : [ {"Ref" : "WebServerSecurityGroup"} ],
-        "KeyName"        : { "Ref" : "KeyName" },
-        "UserData" : { "Fn::Base64" : { "Fn::Join" : ["", [
-                       "#!/bin/bash -xe\n",
-                       "yum update -y aws-cfn-bootstrap\n",
-
-                       "/opt/aws/bin/cfn-init -v ",
-                       "         --stack ", { "Ref" : "AWS::StackName" },
-                       "         --resource LaunchConfig ",
-                       "         --configsets mybb_app_install ",
-                       "         --region ", { "Ref" : "AWS::Region" }, "\n",
-
-                       "/opt/aws/bin/cfn-signal -e $? ",
-                       "         --stack ", { "Ref" : "AWS::StackName" },
-                       "         --resource WebServerGroup ",
-                       "         --region ", { "Ref" : "AWS::Region" }, "\n"
-        ]]}}
+        "AutoScalingGroupName": { "Ref": "WebServerGroup" },
+        "AdjustmentType": "ChangeInCapacity",
+        "ScalingAdjustment": 1,
+        "Cooldown": 60
       }
     },
-
-    "DBSecurityGroup": {
-      "Type": "AWS::RDS::DBSecurityGroup",
+    "AsgScaleDownPolicy": {
+      "Type": "AWS::AutoScaling::ScalingPolicy",
       "Properties": {
-        "EC2VpcId" : { "Ref" : "VPC" },
-        "DBSecurityGroupIngress": {
-          "EC2SecurityGroupId": { "Ref": "WebServerSecurityGroup" }
-        },
-        "GroupDescription": "database access"
+        "AutoScalingGroupName": { "Ref": "WebServerGroup" },
+        "AdjustmentType": "ChangeInCapacity",
+        "ScalingAdjustment": -1,
+        "Cooldown": 60
       }
     },
-    "RDSDBSubnetGroup" : {
-      "Type" : "AWS::RDS::DBSubnetGroup",
-      "Properties" : {
-        "DBSubnetGroupDescription" : "Subnets available for the RDS DB Instance",
-        "SubnetIds" : [ { "Ref" : "RDSSubnet1" }, { "Ref" : "RDSSubnet2" } ]
-      }
-    },
-    "DBEC2SecurityGroup": {
-      "Type": "AWS::EC2::SecurityGroup",
-      "Properties" : {
-        "GroupDescription": "Open database for access",
-        "VpcId" : { "Ref" : "VPC" },
-        "SecurityGroupIngress" : [{
-          "IpProtocol" : "tcp",
-          "FromPort" : "3306",
-          "ToPort" : "3306"
-        }]
-      }
-    },
-
-    "DBInstance" : {
-      "Type": "AWS::RDS::DBInstance",
-      "Properties": {
-        "DBName"            : { "Ref" : "DBName" },
-        "Engine"            : "MySQL",
-        "MultiAZ"           : { "Fn::FindInMap" : [ "AWSRegionCapabilities", { "Ref" : "AWS::Region" }, "RDSMultiAZ"] },
-        "MasterUsername"    : { "Ref" : "DBUser" },
-        "MasterUserPassword": { "Ref" : "DBPassword" },
-        "DBInstanceClass"   : { "Ref" : "DBClass" },
-        "DBSubnetGroupName" : { "Ref" : "RDSDBSubnetGroup" },
-        "AllocatedStorage"  : { "Ref" : "DBAllocatedStorage" },
-        "DBSecurityGroups"  : [ { "Ref": "DBSecurityGroup"} ],
-        "VPCSecurityGroups" : [ { "Ref" : "VPC" } ]
-      }
-    },
-
-    "AlarmTopic" : {
-      "Type" : "AWS::SNS::Topic",
-      "Properties" : {
-        "Subscription" : [ {
-          "Endpoint" : { "Ref" : "OperatorEmail" },
-          "Protocol" : "email"
-        } ]
-      }
-    },
-
     "CPUAlarmHigh" : {
       "Type" : "AWS::CloudWatch::Alarm",
       "Properties" : {
@@ -659,10 +566,36 @@
         "EvaluationPeriods" : "1",
         "Threshold" : "10",
         "ComparisonOperator" : "GreaterThanThreshold",
-        "Dimensions" : [ {
+        "Dimensions" : [{
           "Name" : "AutoScalingGroupName",
           "Value" : { "Ref" : "WebServerGroup" }
-        } ]
+        }],
+        "AlarmActions": [{
+          "Ref": "AsgScaleUpPolicy"
+        }]
+      }
+    },
+
+     "CPUAlarmLow": {
+     "Type": "AWS::CloudWatch::Alarm",
+     "Properties": {
+        "AlarmDescription": "When CPU usage is below 50% for 10 minutes, scale-down!",
+        "Namespace": "AWS/EC2",
+        "MetricName": "CPUUtilization",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "2",
+        "Threshold": "50",
+        "ComparisonOperator": "LessThanThreshold",
+        "Dimensions": [
+          {
+            "Name": "AutoScalingGroupName",
+            "Value": { "Ref": "WebServerGroup" }
+          }
+        ],
+        "AlarmActions": [
+          { "Ref": "AsgScaleDownPolicy" }
+        ]
       }
     },
 
@@ -704,8 +637,178 @@
           "Value" : { "Ref" : "ElasticLoadBalancer" }
         } ]
       }
+    },
+
+    "LaunchConfig": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+
+      "Metadata": {
+        "Comment": "Install MyBB application with dependencies.",
+        "AWS::CloudFormation::Init": {
+          "config": {
+
+            "packages": {
+              "yum": {
+                "httpd": [],
+                "php": [],
+                "php-gd": [],
+                "php-mbstring": [],
+                "php-mysqlnd": [],
+                "mysql": []
+              }
+            },
+
+            "sources": {
+              "/tmp/mybb": "https://github.com/vpalos/cloudformation-mybb/tarball/master"
+            },
+
+            "files": {
+              "/etc/cfn/cfn-hup.conf": {
+                "content": { "Fn::Join": ["", [
+                  "[main]\n",
+                  "stack=", { "Ref": "AWS::StackId" }, "\n",
+                  "region=", { "Ref": "AWS::Region" }, "\n"
+                ]]},
+                "mode": "000400",
+                "owner": "root",
+                "group": "root"
+              },
+              "/etc/cfn/hooks.d/cfn-auto-reloader.conf": {
+                "content": { "Fn::Join": ["", [
+                  "[cfn-auto-reloader-hook]\n",
+                  "triggers=post.update\n",
+                  "path=Resources.LaunchConfig.Metadata.AWS::CloudFormation::Init\n",
+                  "action=/opt/aws/bin/cfn-init -v ",
+                  "   --stack ", { "Ref": "AWS::StackName" },
+                  "   --resource LaunchConfig ",
+                  "   --region ", { "Ref": "AWS::Region" }, "\n",
+                  "runas=root\n"
+                ]]}
+              }
+            },
+
+            "commands": {
+              "install": {
+                "command": "/bin/bash ./install.sh",
+                "cwd": "/tmp/mybb/Source",
+                "env": {
+                  "MYBB_DOMAINNAME": { "Fn::GetAtt": [ "ElasticLoadBalancer", "DNSName" ] },
+                  "MYBB_ADMINEMAIL": { "Ref": "OperatorEmail" },
+                  "MYBB_DBNAME": { "Ref": "DBName" },
+                  "MYBB_DBUSERNAME": { "Ref": "DBUser" },
+                  "MYBB_DBPASSWORD": { "Ref": "DBPassword" },
+                  "MYBB_DBHOSTNAME": { "Fn::GetAtt": [ "DBInstance", "Endpoint.Address" ] },
+                  "MYBB_DBPORT": 3306
+                }
+              }
+            },
+
+            "services": {
+              "sysvinit": {
+                "httpd": {
+                  "enabled": "true",
+                  "ensureRunning": "true"
+                },
+                "cfn-hup": {
+                  "enabled": "true",
+                  "ensureRunning": "true",
+                  "files": [
+                    "/etc/cfn/cfn-hup.conf",
+                    "/etc/cfn/hooks.d/cfn-auto-reloader.conf"
+                  ]
+                }
+              }
+            }
+
+          }
+        }
+      },
+
+      "Properties": {
+        "KeyName": { "Ref": "KeyName" },
+        "SecurityGroups": [
+          { "Ref": "WebServerSecurityGroup" }
+        ],
+        "InstanceType": { "Ref" : "InstanceType" },
+        "ImageId": { "Fn::FindInMap": [ "AWSRegionArch2AMI", { "Ref": "AWS::Region" }, "HVM64" ] },
+        "UserData": { "Fn::Base64": { "Fn::Join": ["", [
+          "#!/bin/bash -xe\n",
+          "yum update -y aws-cfn-bootstrap\n",
+
+          "/opt/aws/bin/cfn-init -v ",
+          "   --stack ", { "Ref": "AWS::StackName" },
+          "   --resource LaunchConfig ",
+          "   --region ", { "Ref": "AWS::Region" }, "\n",
+
+          "/opt/aws/bin/cfn-signal -e $? ",
+          "   --stack ", { "Ref": "AWS::StackName" },
+          "   --resource LaunchConfig ",
+          "   --region ", { "Ref": "AWS::Region" }, "\n"
+        ]]}}
+      },
+      "CreationPolicy" : {
+        "ResourceSignal" : {
+          "Timeout" : "PT15M"
+        }
+      },
+      "UpdatePolicy": {
+        "AutoScalingRollingUpdate": {
+          "MinInstancesInService": "1",
+          "MaxBatchSize": "1",
+          "PauseTime" : "PT15M",
+          "WaitOnResourceSignals": "true"
+        }
+      }
+    },
+
+
+    "DBSecurityGroup": {
+      "Type": "AWS::RDS::DBSecurityGroup",
+      "Properties": {
+        "EC2VpcId" : { "Ref" : "VPC" },
+        "DBSecurityGroupIngress": {
+          "EC2SecurityGroupId": { "Ref": "WebServerSecurityGroup" }
+        },
+        "GroupDescription": "database access"
+      }
+    },
+    "RDSDBSubnetGroup" : {
+      "Type" : "AWS::RDS::DBSubnetGroup",
+      "Properties" : {
+        "DBSubnetGroupDescription" : "Subnets available for the RDS DB Instance",
+        "SubnetIds" : [ { "Ref" : "RDSSubnet1" }, { "Ref" : "RDSSubnet2" } ]
+      }
+    },
+    "DBEC2SecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription": "Open database for access",
+        "VpcId" : { "Ref" : "VPC" },
+        "SecurityGroupIngress" : [{
+          "IpProtocol" : "tcp",
+          "FromPort" : "3306",
+          "ToPort" : "3306"
+        }]
+      }
+    },
+
+
+    "DBInstance" : {
+      "Type": "AWS::RDS::DBInstance",
+      "Properties": {
+        "DBName"            : { "Ref" : "DBName" },
+        "Engine"            : "MySQL",
+        "MultiAZ"           : { "Fn::FindInMap" : [ "AWSRegionCapabilities", { "Ref" : "AWS::Region" }, "RDSMultiAZ"] },
+        "MasterUsername"    : { "Ref" : "DBUser" },
+        "MasterUserPassword": { "Ref" : "DBPassword" },
+        "DBInstanceClass"   : { "Ref" : "DBClass" },
+        "DBSubnetGroupName" : { "Ref" : "RDSDBSubnetGroup" },
+        "AllocatedStorage"  : { "Ref" : "DBAllocatedStorage" },
+        "DBSecurityGroups"  : [ { "Ref": "DBSecurityGroup"} ],
+        "VPCSecurityGroups" : [ { "Ref" : "VPC" } ]
+      }
     }
-  },
+},
 
   "Outputs" : {
     "WebsiteURL" : {
@@ -714,3 +817,4 @@
     }
   }
 }
+
