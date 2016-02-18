@@ -445,7 +445,7 @@
           } 
         ],
         "HealthCheck" : {
-          "Target" : "HTTP:8080/",
+          "Target" : "HTTP:80/",
           "HealthyThreshold" : "2",
           "UnhealthyThreshold" : "5",
           "Interval" : "10",
@@ -495,33 +495,11 @@
       "Properties" : {
         "VpcId" : { "Ref" : "VPC" },
         "GroupDescription" : "Enable HTTP access via port 80 locked down to the load balancer + SSH access",
-        "SecurityGroupIngress" : [
-          { 
-            "IpProtocol" : "tcp", 
-            "FromPort" : "80", 
-            "ToPort" : "80",
-            "CidrIp" : "0.0.0.0/0"
-          },
-          { 
-            "IpProtocol" : "tcp", 
-            "FromPort" : "22", 
-            "ToPort" : "22", 
-            "CidrIp" : { "Ref" : "SSHLocation"}
-          }
-        ],
-        "SecurityGroupEgress" : [
-          { 
-            "IpProtocol" : "tcp", 
-            "FromPort" : "80", 
-            "ToPort" : "80",
-            "CidrIp" : "0.0.0.0/0"
-          },
-          { 
-            "IpProtocol" : "tcp", 
-            "FromPort" : "22", 
-            "ToPort" : "22", 
-            "CidrIp" : { "Ref" : "SSHLocation"}
-          }
+        "SecurityGroupIngress" : [ 
+          { "IpProtocol" : "tcp", "FromPort" : "80", "ToPort" : "80", "SourceSecurityGroupId" : { "Ref" : "PublicLoadBalancerSecurityGroup" } }, 
+          { "IpProtocol" : "tcp", "FromPort" : "8080", "ToPort" : "8080", "SourceSecurityGroupId" : { "Ref" : "PublicLoadBalancerSecurityGroup" } },
+          { "IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "SourceSecurityGroupId" : { "Ref" : "PublicLoadBalancerSecurityGroup" } } 
+ 
         ]
       }
       },
@@ -663,7 +641,6 @@
 
     "LaunchConfig": {
       "Type": "AWS::AutoScaling::LaunchConfiguration",
-
       "Metadata": {
         "Comment": "Install MyBB application with dependencies.",
         "AWS::CloudFormation::Init": {
