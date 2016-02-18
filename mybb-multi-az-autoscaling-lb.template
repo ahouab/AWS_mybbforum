@@ -396,7 +396,7 @@
       }
     },
 
-    "OutBoundHTTPNetworkAclEntry" : {
+    "OutboundPublicNetworkAclEntry" : {
       "Type" : "AWS::EC2::NetworkAclEntry",
       "Properties" : {
         "NetworkAclId" : {"Ref" : "NetworkAcl"},
@@ -405,46 +405,7 @@
         "RuleAction" : "allow",
         "Egress" : "true",
         "CidrBlock" : "0.0.0.0/0",
-        "PortRange" : {"From" : "80", "To" : "80"}
-      }
-    },
-
-    "OutBoundHTTPSNetworkAclEntry" : {
-      "Type" : "AWS::EC2::NetworkAclEntry",
-      "Properties" : {
-        "NetworkAclId" : {"Ref" : "NetworkAcl"},
-        "RuleNumber" : "101",
-        "Protocol" : "6",
-        "RuleAction" : "allow",
-        "Egress" : "true",
-        "CidrBlock" : "0.0.0.0/0",
-        "PortRange" : {"From" : "443", "To" : "443"}
-      }
-    },
-
-    "OutboundSSHNetworkAclEntry" : {
-      "Type" : "AWS::EC2::NetworkAclEntry",
-      "Properties" : {
-        "NetworkAclId" : {"Ref" : "NetworkAcl"},
-        "RuleNumber" : "102",
-        "Protocol" : "6",
-        "RuleAction" : "allow",
-        "Egress" : "true",
-        "CidrBlock" : "0.0.0.0/0",
-        "PortRange" : {"From" : "22", "To" : "22"}
-      }
-    },
-
-    "OutBoundResponsePortsNetworkAclEntry" : {
-      "Type" : "AWS::EC2::NetworkAclEntry",
-      "Properties" : {
-        "NetworkAclId" : {"Ref" : "NetworkAcl"},
-        "RuleNumber" : "103",
-        "Protocol" : "6",
-        "RuleAction" : "allow",
-        "Egress" : "true",
-        "CidrBlock" : "0.0.0.0/0",
-        "PortRange" : {"From" : "1024", "To" : "65535"}
+        "PortRange" : {"From" : "0", "To" : "65535"}
       }
     },
 
@@ -484,7 +445,7 @@
           } 
         ],
         "HealthCheck" : {
-          "Target" : "HTTP:80/",
+          "Target" : "HTTP:8080/",
           "HealthyThreshold" : "2",
           "UnhealthyThreshold" : "5",
           "Interval" : "10",
@@ -504,13 +465,25 @@
             "FromPort" : "80", 
             "ToPort" : "80", 
             "CidrIp" : "0.0.0.0/0"
-          } 
+          },
+          { 
+          "IpProtocol" : "tcp",
+          "FromPort" : "443",
+          "ToPort" : "443",
+          "CidrIp" : "0.0.0.0/0"
+          }  
         ],
         "SecurityGroupEgress" : [ 
           { 
             "IpProtocol" : "tcp", 
             "FromPort" : "80", 
             "ToPort" : "80", 
+            "CidrIp" : "0.0.0.0/0"
+          },
+          { 
+            "IpProtocol" : "tcp",
+            "FromPort" : "8080",
+            "ToPort" : "8080",
             "CidrIp" : "0.0.0.0/0"
           } 
         ]
