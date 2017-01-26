@@ -30,5 +30,5 @@ chmod 777 ./uploads/avatars/
 chmod 777 ./admin/backups/ 
 
 cd "${SCRIPT_DIR}/"
-sed -i "s/REPLACE_WITH_MYBB_URL/${MYBB_URL}/g" ./mybb_initdb.sql
-mysql -u "${DB_USER}" -h "${DB_HOSTNAME}" -p"${DB_PASSWORD}" "${DATABASE}" < mybb_initdb.sql 2>/dev/null || echo "DB already initialized. Ignoring import errors"
+sed -i "s/REPLACE_WITH_MYBB_URL/${MYBB_URL}/g" ./mybb.sql
+mysql -u "${DB_USER}" -h "${DB_HOSTNAME}" -p"${DB_PASSWORD}" "${DATABASE}" < mybb.sql 2>/dev/null || echo "DB already initialized. Ignoring import errors"
