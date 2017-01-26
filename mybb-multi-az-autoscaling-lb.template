@@ -98,7 +98,7 @@
     "OperatorEmail" : {
       "Description" : "Email address to notify if there are any operational issues",
       "Type" : "String",
-      "Default" : "hostmaster@stratotechnology.com"
+      "Default" : "aaliouche@gmail.com"
     }
   },
 
@@ -688,7 +688,7 @@
 
             "commands": {
               "install": {
-                "command": "/bin/bash ./install.sh",
+                "command": "/bin/bash ./install_mybb.sh",
                 "cwd": "/tmp/mybb/Source",
                 "env": {
                   "MYBB_DOMAINNAME": { "Fn::GetAtt": [ "ElasticLoadBalancer", "DNSName" ] },
