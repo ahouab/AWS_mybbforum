@@ -1,5 +1,5 @@
 {
-  "AWSTemplateFormatVersion" : "2010-09-09",
+  "AWSTemplateFormatVersion" : "2017-01-26",
 
   "Description" : "MyBB App: highly-available, scalable deployment using a multi-az Amazon RDS database instance for storage, ELB and VPC ",
 
