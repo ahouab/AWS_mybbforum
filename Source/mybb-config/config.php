@@ -56,8 +56,9 @@ $config['cache_store'] = 'db';
  * If not using memcache, ignore this section.
  */
 
-$config['memcache']['host'] = 'localhost';
-$config['memcache']['port'] = 11211;
+/*$config['memcache']['host'] = 'localhost';
+ $config['memcache']['port'] = 11211;
+*/
 
 /**
  * Super Administrators
@@ -96,12 +97,3 @@ $config['log_pruning'] = array(
 	'user_mail_logs' => 180, // User mail logs
 	'promotion_logs' => 180 // Promotion logs
 );
-
-/**
- * Admin CP Secret PIN
- *  If you wish to request a PIN
- *  when someone tries to login
- *  on your Admin CP, enter it below.
- */
-
-$config['secret_pin'] = '';
