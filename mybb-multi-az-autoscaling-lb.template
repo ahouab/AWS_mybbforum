@@ -235,7 +235,8 @@
       "us-west-2"      : { "RDSMultiAZ" : "true" },
       "eu-west-1"      : { "RDSMultiAZ" : "true" },
       "ap-southeast-1" : { "RDSMultiAZ" : "true" },
-      "ap-northeast-1" : { "RDSMultiAZ" : "true" }
+      "ap-northeast-1" : { "RDSMultiAZ" : "true" },
+      "eu-central-1"   : { "RDSMultiAZ" : "true" }
     },
     "SubnetConfig" : {
       "VPC"     : { "CIDR" : "10.0.0.0/16" },
