@@ -658,7 +658,7 @@
             },
 
             "sources": {
-              "/tmp/mybb": "https://github.com/WesleyCharlesBlake/mybb-aws-cloud-formation-app/tarball/master"
+              "/tmp/mybb": "https://github.com/ahouab/aws_mybbforum/tarball/master"
             },
 
             "files": {
